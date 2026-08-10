@@ -264,7 +264,7 @@
   .cal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
   .cal-header h3{font-family:'Manrope',sans-serif; font-size:18px; margin:0; text-transform:capitalize;}
   .cal-nav{width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--glass-strong); border:1px solid var(--glass-border); cursor:pointer; font-size:14px; font-weight:700;}
-  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; padding:16px;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:5px; padding:0; width:100%;}
   .cal-dow{text-align:center; font-size:10.5px; font-weight:700; color:var(--ink-faint); padding-bottom:4px;}
   .cal-cell{
     aspect-ratio:1; border-radius:10px; display:flex; align-items:center; justify-content:center;
@@ -339,7 +339,7 @@
   <!-- CALENDAR -->
   <div class="view" id="view-calendar">
     <div class="chip-row" id="calChips"></div>
-    <div class="glass" style="border-radius:24px; padding:16px;">
+    <div class="glass" style="border-radius:24px; padding:16px; overflow:hidden; width:100%;">
       <div class="cal-header">
         <div class="cal-nav" onclick="shiftMonth(-1)">‹</div>
         <h3 id="calMonthLabel">—</h3>

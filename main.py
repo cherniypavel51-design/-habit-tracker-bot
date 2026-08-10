@@ -20,7 +20,10 @@ import sqlite3
 import asyncio
 import logging
 from datetime import datetime, date
+from zoneinfo import ZoneInfo
 from contextlib import asynccontextmanager
+
+TZ = ZoneInfo("Europe/Moscow")
 
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
@@ -76,8 +79,11 @@ def all_user_ids() -> list[str]:
 
 # ---------------------------------------------------------------- helpers
 
+def now_local() -> datetime:
+    return datetime.now(TZ)
+
 def today_str() -> str:
-    return date.today().isoformat()
+    return now_local().date().isoformat()
 
 def dow_index(d: date) -> int:
     return d.weekday()  # Monday=0 already matches ПН=0 in the frontend
@@ -114,10 +120,10 @@ async def start_handler(message: Message):
     )
 
 async def reminder_tick(scheduler_state: dict):
-    """Runs every minute: checks every user's habits against current HH:MM."""
-    now = datetime.now()
+    """Runs every minute: checks every user's habits against current HH:MM (Moscow time)."""
+    now = now_local()
     hhmm = now.strftime("%H:%M")
-    today = date.today()
+    today = now.date()
     ds = today_str()
 
     for user_id in all_user_ids():
@@ -155,7 +161,7 @@ scheduler = AsyncIOScheduler()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    scheduler.add_job(reminder_tick, "cron", second=0, args=[scheduler_state])  # every minute at :00
+    scheduler.add_job(reminder_tick, "cron", second=0, timezone=TZ, args=[scheduler_state])  # every minute at :00, Moscow time
     scheduler.start()
     bot_task = None
     if bot:

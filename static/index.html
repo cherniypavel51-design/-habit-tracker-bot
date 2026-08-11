@@ -1,339 +1,1104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Привычки</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1:#eef1fb;
+    --bg-2:#f7f4fb;
+    --glass:rgba(255,255,255,0.55);
+    --glass-strong:rgba(255,255,255,0.78);
+    --glass-border:rgba(255,255,255,0.9);
+    --ink:#1c1d2b;
+    --ink-soft:#6b6d85;
+    --ink-faint:#a3a5bd;
+    --accent:#6d6bff;
+    --accent-2:#8f7bff;
+    --mint:#22c58b;
+    --coral:#ff5d6c;
+    --amber:#ffb020;
+    --shadow-soft: 0 8px 30px rgba(90,90,150,0.10);
+    --shadow-lift: 0 16px 40px rgba(90,90,150,0.18);
+    --radius-xl: 28px;
+    --radius-lg: 22px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%; width:100%; overflow-x:hidden;}
+  body{
+    margin:0;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 15% -10%, rgba(140,130,255,0.35), transparent 45%),
+      radial-gradient(circle at 100% 10%, rgba(255,190,150,0.22), transparent 40%),
+      radial-gradient(circle at 20% 100%, rgba(120,220,190,0.25), transparent 45%),
+      linear-gradient(180deg, var(--bg-1), var(--bg-2));
+    min-height:100vh;
+    overscroll-behavior:none;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{max-width:480px; width:100%; margin:0 auto; padding:20px 16px 110px; position:relative; overflow-x:hidden;}
 
+  /* ---------- Header ---------- */
+  .header{display:flex; align-items:flex-end; justify-content:space-between; padding:6px 4px 18px;}
+  .header .date{font-size:13px; color:var(--ink-soft); font-weight:600; text-transform:capitalize; letter-spacing:.2px;}
+  .header h1{font-family:'Manrope',sans-serif; font-size:30px; font-weight:800; margin:2px 0 0; letter-spacing:-0.5px;}
+  .streakpill{
+    display:flex; align-items:center; gap:6px;
+    background:var(--glass-strong);
+    border:1px solid var(--glass-border);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    padding:9px 14px 9px 10px;
+    border-radius:999px;
+    box-shadow:var(--shadow-soft);
+    font-weight:800; font-size:15px;
+    transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .streakpill.bump{transform:scale(1.12);}
+  .streakpill .flame{font-size:16px;}
 
-elegant-miracle
+  /* ---------- Glass card base ---------- */
+  .glass{
+    background:var(--glass);
+    border:1px solid var(--glass-border);
+    backdrop-filter:blur(24px) saturate(160%);
+    -webkit-backdrop-filter:blur(24px) saturate(160%);
+    box-shadow:var(--shadow-soft);
+  }
 
-production
+  /* ---------- Tabs ---------- */
+  .tabs{
+    position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+    display:flex; gap:4px; padding:6px;
+    border-radius:24px; z-index:50;
+    max-width:440px; width:calc(100% - 32px);
+    background:var(--glass-strong);
+    border:1px solid var(--glass-border);
+    backdrop-filter:blur(28px) saturate(180%);
+    -webkit-backdrop-filter:blur(28px) saturate(180%);
+    box-shadow:var(--shadow-lift);
+  }
+  .tab{
+    flex:1; text-align:center; padding:11px 0; border-radius:18px;
+    font-size:13px; font-weight:700; color:var(--ink-soft);
+    cursor:pointer; transition:all .35s cubic-bezier(.22,1,.36,1);
+    position:relative;
+  }
+  .tab.active{color:#fff;}
+  .tab .tab-bg{
+    position:absolute; inset:0; border-radius:18px; z-index:-1;
+    background:linear-gradient(135deg, var(--accent), var(--accent-2));
+    opacity:0; transform:scale(.8);
+    transition:all .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  .tab.active .tab-bg{opacity:1; transform:scale(1); box-shadow:0 8px 20px rgba(109,107,255,0.4);}
 
+  .view{display:none; animation:fadeSlide .35s cubic-bezier(.22,1,.36,1);}
+  .view.active{display:block;}
+  @keyframes fadeSlide{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
 
+  /* ---------- Section titles ---------- */
+  .section-title{font-size:13px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:1px; margin:22px 4px 10px;}
+  .section-title:first-child{margin-top:0;}
 
-30 days or $4.96 left
+  /* ---------- Habit card ---------- */
+  .habit-wrap{position:relative; margin-bottom:12px; border-radius:var(--radius-lg); overflow:hidden;}
+  .habit-wrap.reordering{overflow:visible; z-index:30;}
+  .habit-wrap.reordering .habit-card{box-shadow:0 16px 36px rgba(90,80,160,0.38); border-color:transparent;}
+  .swipe-actions{
+    position:absolute; top:0; right:0; height:100%; display:flex; align-items:stretch;
+  }
+  .swipe-btn{
+    width:64px; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:20px; cursor:pointer;
+  }
+  .swipe-btn.del{background:linear-gradient(135deg,#ff5d6c,#ff8390);}
+  .habit-card{
+    position:relative; z-index:2;
+    display:flex; align-items:center; gap:13px;
+    padding:14px 16px;
+    border-radius:var(--radius-lg);
+    background:var(--glass-strong);
+    border:1px solid var(--glass-border);
+    backdrop-filter:blur(24px) saturate(160%);
+    -webkit-backdrop-filter:blur(24px) saturate(160%);
+    box-shadow:var(--shadow-soft);
+    transition:transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s;
+    touch-action:pan-y;
+  }
+  .habit-card:active{transform:scale(0.98);}
+  .habit-card.done{background:linear-gradient(135deg, rgba(109,107,255,0.16), rgba(143,123,255,0.10));}
+  .habit-emoji{
+    width:44px; height:44px; min-width:44px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center; font-size:21px;
+    background:rgba(255,255,255,0.65);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.8);
+  }
+  .habit-info{flex:1; min-width:0;}
+  .habit-name{font-weight:700; font-size:15px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .habit-meta{font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:6px;}
+  .habit-meta .streakdot{color:var(--amber); font-weight:700;}
 
+  /* checkbox */
+  .check-btn{
+    width:32px; height:32px; min-width:32px; border-radius:50%;
+    border:2px solid rgba(109,107,255,0.35);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:all .3s cubic-bezier(.34,1.56,.64,1);
+    background:rgba(255,255,255,0.5);
+  }
+  .check-btn.checked{
+    background:linear-gradient(135deg, var(--mint), #17b57e);
+    border-color:transparent;
+    transform:scale(1.08);
+    box-shadow:0 6px 16px rgba(34,197,139,0.4);
+  }
+  .check-btn svg{width:16px; height:16px; opacity:0; transform:scale(.5); transition:all .25s cubic-bezier(.34,1.56,.64,1);}
+  .check-btn.checked svg{opacity:1; transform:scale(1);}
 
-Agent
+  /* quantity ring */
+  .qty-ring-wrap{position:relative; width:44px; height:44px; min-width:44px; cursor:pointer;}
+  .qty-ring-wrap svg{transform:rotate(-90deg);}
+  .qty-ring-bg{fill:none; stroke:rgba(109,107,255,0.15); stroke-width:4;}
+  .qty-ring-fg{fill:none; stroke:url(#ringGrad); stroke-width:4.5; stroke-linecap:round; transition:stroke-dashoffset .45s cubic-bezier(.22,1,.36,1);}
+  .qty-label{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:800; color:var(--accent);}
 
+  /* progress bar under quantity habits */
+  .habit-progress-track{height:5px; border-radius:4px; background:rgba(109,107,255,0.12); margin-top:7px; overflow:hidden;}
+  .habit-progress-fill{height:100%; border-radius:4px; background:linear-gradient(90deg, var(--accent), var(--mint)); transition:width .45s cubic-bezier(.22,1,.36,1);}
 
+  /* ---------- Today widget stats ---------- */
+  .stats-row{display:flex; gap:10px; margin-bottom:6px;}
+  .stat-card{flex:1; padding:16px 14px; border-radius:var(--radius-md); text-align:left;}
+  .stat-card .num{font-family:'Manrope',sans-serif; font-size:24px; font-weight:800;}
+  .stat-card .lbl{font-size:11.5px; color:var(--ink-soft); font-weight:600; margin-top:2px;}
 
+  /* ---------- Add button ---------- */
+  .fab{
+    position:fixed; right:20px; bottom:92px; z-index:60;
+    width:58px; height:58px; border-radius:50%;
+    background:linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow:0 12px 28px rgba(109,107,255,0.45);
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:26px; cursor:pointer;
+    transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+    border:none;
+  }
+  .fab:active{transform:scale(0.88) rotate(90deg);}
 
+  /* ---------- Empty state ---------- */
+  .empty{
+    text-align:center; padding:60px 20px 30px; color:var(--ink-soft);
+  }
+  .empty .emoji{font-size:46px; margin-bottom:14px; display:block;}
+  .empty h3{font-family:'Manrope',sans-serif; font-size:19px; color:var(--ink); margin:0 0 6px;}
+  .empty p{font-size:13.5px; line-height:1.5; max-width:280px; margin:0 auto;}
 
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(30,25,60,0.28);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    z-index:100; display:flex; align-items:flex-end;
+    opacity:0; pointer-events:none; transition:opacity .3s ease;
+  }
+  .overlay.show{opacity:1; pointer-events:auto;}
+  .sheet{
+    width:100%; max-width:480px; margin:0 auto;
+    background:rgba(250,249,255,0.92);
+    backdrop-filter:blur(30px) saturate(180%);
+    -webkit-backdrop-filter:blur(30px) saturate(180%);
+    border-radius:28px 28px 0 0;
+    padding:10px 20px calc(24px + env(safe-area-inset-bottom));
+    box-shadow:0 -20px 60px rgba(90,80,160,0.25);
+    transform:translateY(100%);
+    transition:transform .4s cubic-bezier(.22,1,.36,1);
+    max-height:88vh; overflow-y:auto; overflow-x:hidden; touch-action:pan-y;
+  }
+  .overlay.show .sheet{transform:translateY(0);}
+  .sheet-handle-hit{padding:8px 0 4px; display:flex; justify-content:center; touch-action:none;}
+  .sheet-handle{width:38px; height:4px; background:rgba(109,107,255,0.25); border-radius:4px;}
+  .sheet h2{font-family:'Manrope',sans-serif; font-size:21px; margin:0 0 18px;}
 
--habit-tracker-bot
-Deployments
-Backups
-Variables
-Metrics
-Console
-Settings
-habit-tracker-bot-production-e103.up.railway.app
-3.13.14python@3.13.14
-US West
-1 Replica
+  .field{margin-bottom:16px;}
+  .field label{font-size:12.5px; font-weight:700; color:var(--ink-soft); display:block; margin-bottom:7px; text-transform:uppercase; letter-spacing:.5px;}
+  .field input[type=text], .field input[type=number], .field input[type=time]{
+    width:100%; padding:13px 14px; border-radius:14px; border:1px solid rgba(109,107,255,0.18);
+    background:rgba(255,255,255,0.7); font-size:15px; font-family:inherit; color:var(--ink);
+    outline:none; transition:border-color .2s, box-shadow .2s;
+  }
+  .field input:focus{border-color:var(--accent); box-shadow:0 0 0 4px rgba(109,107,255,0.12);}
+  .emoji-grid{display:flex; flex-wrap:wrap; gap:8px;}
+  .emoji-opt{
+    width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:20px; background:rgba(255,255,255,0.6); border:2px solid transparent; cursor:pointer;
+    transition:all .2s cubic-bezier(.34,1.56,.64,1);
+  }
+  .emoji-opt.sel{border-color:var(--accent); background:rgba(109,107,255,0.15); transform:scale(1.1);}
+  .seg{display:flex; gap:6px; background:rgba(109,107,255,0.08); padding:4px; border-radius:14px;}
+  .seg-opt{flex:1; text-align:center; padding:10px 4px; border-radius:11px; font-size:13px; font-weight:700; color:var(--ink-soft); cursor:pointer; transition:all .25s;}
+  .seg-opt.sel{background:#fff; color:var(--accent); box-shadow:0 4px 10px rgba(109,107,255,0.18);}
+  .days-grid{display:flex; gap:6px;}
+  .day-opt{
+    flex:1; min-width:0; text-align:center; padding:10px 0; border-radius:11px; font-size:12px; font-weight:700;
+    background:rgba(109,107,255,0.08); color:var(--ink-soft); cursor:pointer; transition:all .2s;
+  }
+  .day-opt.sel{background:var(--accent); color:#fff;}
+  .reminder-row{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .reminder-row input[type=time]{flex:1;}
+  .reminder-remove{
+    width:38px; height:38px; min-width:38px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,93,108,0.12); color:var(--coral); font-size:14px; cursor:pointer;
+  }
+  .add-reminder-btn{
+    text-align:center; padding:11px; border-radius:12px; font-size:13px; font-weight:700; color:var(--accent);
+    background:rgba(109,107,255,0.08); border:1.5px dashed rgba(109,107,255,0.35); cursor:pointer; transition:all .2s;
+  }
+  .add-reminder-btn:active{transform:scale(0.97); background:rgba(109,107,255,0.14);}
+  .btn-primary{
+    width:100%; padding:15px; border:none; border-radius:16px; font-size:15px; font-weight:800;
+    background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff; cursor:pointer;
+    box-shadow:0 10px 24px rgba(109,107,255,0.35); margin-top:6px;
+    transition:transform .2s cubic-bezier(.34,1.56,.64,1);
+  }
+  .btn-primary:active{transform:scale(0.97);}
+  .btn-ghost{
+    width:100%; padding:14px; border:none; border-radius:16px; font-size:14px; font-weight:700;
+    background:rgba(255,93,108,0.12); color:var(--coral); cursor:pointer; margin-top:10px;
+  }
 
+  /* ---------- Calendar ---------- */
+  .cal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .cal-header h3{font-family:'Manrope',sans-serif; font-size:18px; margin:0; text-transform:capitalize;}
+  .cal-nav{width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--glass-strong); border:1px solid var(--glass-border); cursor:pointer; font-size:14px; font-weight:700;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:5px; padding:0; width:100%;}
+  .cal-dow{text-align:center; font-size:10.5px; font-weight:700; color:var(--ink-faint); padding-bottom:4px;}
+  .cal-cell{
+    aspect-ratio:1; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; color:var(--ink-soft); position:relative; cursor:pointer;
+    background:rgba(109,107,255,0.05); transition:transform .15s;
+  }
+  .cal-cell:active{transform:scale(0.9);}
+  .cal-cell.empty{background:transparent; cursor:default;}
+  .cal-cell.today{box-shadow:0 0 0 2px var(--accent) inset;}
+  .cal-cell.l1{background:rgba(109,107,255,0.18); color:var(--ink);}
+  .cal-cell.l2{background:rgba(109,107,255,0.38); color:#fff;}
+  .cal-cell.l3{background:rgba(109,107,255,0.62); color:#fff;}
+  .cal-cell.l4{background:linear-gradient(135deg,var(--accent),var(--mint)); color:#fff;}
 
+  /* habit filter chips (calendar view) */
+  .chip-row{display:flex; gap:8px; overflow-x:auto; padding:2px 2px 14px; scrollbar-width:none;}
+  .chip-row::-webkit-scrollbar{display:none;}
+  .chip{
+    padding:9px 15px; border-radius:999px; font-size:12.5px; font-weight:700; white-space:nowrap; cursor:pointer;
+    background:var(--glass-strong); border:1px solid var(--glass-border); color:var(--ink-soft); transition:all .25s;
+  }
+  .chip.sel{background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; border-color:transparent; box-shadow:0 6px 16px rgba(109,107,255,0.3);}
 
+  /* stats view */
+  .habit-stat-card{padding:16px; border-radius:var(--radius-lg); margin-bottom:12px;}
+  .habit-stat-top{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+  .habit-stat-top .habit-name{font-size:14.5px;}
+  .mini-stats{display:flex; gap:14px;}
+  .mini-stat .n{font-weight:800; font-size:17px; font-family:'Manrope',sans-serif;}
+  .mini-stat .l{font-size:10.5px; color:var(--ink-soft); font-weight:600;}
 
-History
+  .search-bar{
+    display:flex; align-items:center; gap:8px; padding:12px 15px; border-radius:16px; margin-bottom:16px;
+  }
+  .search-bar input{flex:1; border:none; background:transparent; outline:none; font-size:14px; font-family:inherit; color:var(--ink);}
 
-Hide Skipped
+  .toast{
+    position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-60px);
+    background:var(--ink); color:#fff; padding:11px 18px; border-radius:14px; font-size:13px; font-weight:600;
+    z-index:200; transition:transform .35s cubic-bezier(.34,1.56,.64,1); box-shadow:0 10px 24px rgba(0,0,0,0.2);
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div id="app">
 
+  <div class="header">
+    <div>
+      <div class="date" id="todayDate">—</div>
+      <h1>Привычки</h1>
+    </div>
+    <div class="streakpill" id="streakPill"><span class="flame">🔥</span><span id="streakNum">0</span></div>
+  </div>
 
+  <!-- TODAY -->
+  <div class="view active" id="view-today">
+    <div class="stats-row">
+      <div class="stat-card glass" style="border-radius:22px;">
+        <div class="num" id="statDoneToday">0/0</div>
+        <div class="lbl">Сегодня</div>
+      </div>
+      <div class="stat-card glass" style="border-radius:22px;">
+        <div class="num" id="statWeekPct">0%</div>
+        <div class="lbl">За неделю</div>
+      </div>
+    </div>
+    <div class="section-title">Сегодня</div>
+    <div id="todayList"></div>
+  </div>
 
+  <!-- CALENDAR -->
+  <div class="view" id="view-calendar">
+    <div class="chip-row" id="calChips"></div>
+    <div class="glass" style="border-radius:24px; padding:16px; overflow:hidden; width:100%;">
+      <div class="cal-header">
+        <div class="cal-nav" onclick="shiftMonth(-1)">‹</div>
+        <h3 id="calMonthLabel">—</h3>
+        <div class="cal-nav" onclick="shiftMonth(1)">›</div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </div>
 
+  <!-- STATS -->
+  <div class="view" id="view-stats">
+    <div class="stats-row">
+      <div class="stat-card glass" style="border-radius:22px;">
+        <div class="num" id="statMonthPct">0%</div>
+        <div class="lbl">За месяц</div>
+      </div>
+      <div class="stat-card glass" style="border-radius:22px;">
+        <div class="num" id="statBestStreak">0</div>
+        <div class="lbl">Лучший streak</div>
+      </div>
+    </div>
+    <div class="search-bar glass" style="border-radius:16px;">
+      <span style="opacity:.5;">🔍</span>
+      <input type="text" id="searchInput" placeholder="Поиск привычки...">
+    </div>
+    <div class="section-title">По привычкам</div>
+    <div id="statsList"></div>
+  </div>
 
+</div>
 
+<div class="tabs">
+  <div class="tab active" data-view="today"><div class="tab-bg"></div>Сегодня</div>
+  <div class="tab" data-view="calendar"><div class="tab-bg"></div>Календарь</div>
+  <div class="tab" data-view="stats"><div class="tab-bg"></div>Статистика</div>
+</div>
 
+<button class="fab" onclick="openHabitSheet()">+</button>
 
+<!-- Add/Edit Habit Sheet -->
+<div class="overlay" id="habitOverlay">
+  <div class="sheet">
+    <div class="sheet-handle-hit" id="sheetHandleHit"><div class="sheet-handle"></div></div>
+    <h2 id="sheetTitle">Новая привычка</h2>
 
+    <div class="field">
+      <label>Название</label>
+      <input type="text" id="fName" placeholder="Например, Читать 10 минут" maxlength="40">
+    </div>
 
+    <div class="field">
+      <label>Иконка</label>
+      <div class="emoji-grid" id="emojiGrid"></div>
+    </div>
 
+    <div class="field">
+      <label>Категория</label>
+      <div class="seg" id="categorySeg"></div>
+    </div>
 
+    <div class="field">
+      <label>Тип</label>
+      <div class="seg" id="typeSeg">
+        <div class="seg-opt sel" data-type="check">Отметка</div>
+        <div class="seg-opt" data-type="count">Количество</div>
+      </div>
+    </div>
 
+    <div class="field" id="targetField" style="display:none;">
+      <label>Цель за день</label>
+      <input type="number" id="fTarget" placeholder="7" min="1" max="99">
+    </div>
 
+    <div class="field">
+      <label>Дни</label>
+      <div class="days-grid" id="daysGrid"></div>
+    </div>
 
+    <div class="field">
+      <label>Напоминания (для Telegram-бота)</label>
+      <div id="reminderRows"></div>
+      <div class="add-reminder-btn" onclick="addReminderRow()">+ Добавить время</div>
+    </div>
 
+    <button class="btn-primary" onclick="saveHabit()">Сохранить</button>
+    <button class="btn-ghost" id="archiveBtn" style="display:none;" onclick="toggleArchive()">Архивировать</button>
+  </div>
+</div>
 
+<div class="toast" id="toast"></div>
 
--habit-tracker-bot
-/
-a5722120
-Active
+<svg width="0" height="0" style="position:absolute;">
+  <defs>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6d6bff"/>
+      <stop offset="100%" stop-color="#22c58b"/>
+    </linearGradient>
+  </defs>
+</svg>
 
-2026-08-11 12:53 GMT+3
-habit-tracker-bot-production-e103.up.railway.app
-Details
-Build Logs
-Deploy Logs
-Network Logs
-Filter and search logs
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+/* ===================== TELEGRAM ===================== */
+const tg = window.Telegram ? window.Telegram.WebApp : null;
+if(tg){ tg.ready(); tg.expand(); }
+// В проде user_id берём из initDataUnsafe. Для теста в обычном браузере — фиксированный id.
+const USER_ID = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user)
+  ? String(tg.initDataUnsafe.user.id)
+  : 'test-user';
 
+/* ===================== STORAGE (backend API) ===================== */
+let state = { habits: [], completions: {} }; // completions[habitId][dateStr] = true/false or number
+let dataLoaded = false;
 
-  File "/app/main.py", line 58, in get_state
-    conn = db()
-  File "/app/main.py", line 48, in db
-    conn = sqlite3.connect(DB_PATH)
-sqlite3.OperationalError: unable to open database file
-INFO:     100.64.0.5:46180 - "POST /api/state HTTP/1.1" 500 Internal Server Error
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/app/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 401, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        self.scope, self.receive, self.send
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/app/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 70, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1054, in __call__
-    await super().__call__(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 187, in __call__
-    raise exc
-  File "/app/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 165, in __call__
-    await self.app(scope, receive, _send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 62, in wrapped_app
-    raise exc
-  File "/app/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 51, in wrapped_app
-    await app(scope, receive, sender)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 715, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 735, in app
-    await route.handle(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
-    await self.app(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
-    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 62, in wrapped_app
-    raise exc
-  File "/app/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 51, in wrapped_app
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    await app(scope, receive, sender)
-  File "/app/main.py", line 201, in api_set_state
-    set_state(user_id, state)
-    ~~~~~~~~~^^^^^^^^^^^^^^^^
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
-  File "/app/main.py", line 66, in set_state
-    conn = db()
-  File "/app/main.py", line 48, in db
-    response = await f(request)
-               ^^^^^^^^^^^^^^^^
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
-    ...<3 lines>...
-    )
-    ^
-  File "/app/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
-    return await dependant.call(**values)
-    conn = sqlite3.connect(DB_PATH)
-sqlite3.OperationalError: unable to open database file
-  File "/app/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 187, in __call__
-    raise exc
-  File "/app/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 165, in __call__
-INFO:     100.64.0.6:62474 - "POST /api/state HTTP/1.1" 500 Internal Server Error
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/app/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 401, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        self.scope, self.receive, self.send
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/app/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 70, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1054, in __call__
-    await super().__call__(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
-    await self.middleware_stack(scope, receive, send)
-    await self.app(scope, receive, _send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 62, in wrapped_app
-    raise exc
-  File "/app/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 51, in wrapped_app
-    await app(scope, receive, sender)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 715, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 735, in app
-    await route.handle(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
-    await self.app(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
-    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 62, in wrapped_app
-    raise exc
-  File "/app/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 51, in wrapped_app
-  File "/app/main.py", line 66, in set_state
-    conn = db()
-sqlite3.OperationalError: unable to open database file
-  File "/app/main.py", line 48, in db
-    conn = sqlite3.connect(DB_PATH)
-    await app(scope, receive, sender)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
-    response = await f(request)
-               ^^^^^^^^^^^^^^^^
-  File "/app/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ...<3 lines>...
-    )
-    ^
-  File "/app/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
-    return await dependant.call(**values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/main.py", line 201, in api_set_state
-    set_state(user_id, state)
-    ~~~~~~~~~^^^^^^^^^^^^^^^^
-INFO:     100.64.0.3:37376 - "GET /?v=1786442078 HTTP/1.1" 200 OK
-INFO:     100.64.0.2:19660 - "GET /api/state?user_id=772957775 HTTP/1.1" 500 Internal Server Error
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/app/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 401, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        self.scope, self.receive, self.send
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/app/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 70, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1054, in __call__
-    await super().__call__(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 187, in __call__
-    raise exc
-  File "/app/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 165, in __call__
-    await self.app(scope, receive, _send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 62, in wrapped_app
-  File "/app/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 51, in wrapped_app
-    raise exc
-  File "/app/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 51, in wrapped_app
-    await app(scope, receive, sender)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 715, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 735, in app
-    await route.handle(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
-    await self.app(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
-    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 62, in wrapped_app
-    raise exc
-    conn = sqlite3.connect(DB_PATH)
-sqlite3.OperationalError: unable to open database file
-    await app(scope, receive, sender)
-  File "/app/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
-    response = await f(request)
-               ^^^^^^^^^^^^^^^^
-  File "/app/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ...<3 lines>...
-    )
-    ^
-  File "/app/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
-    return await dependant.call(**values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/main.py", line 192, in api_get_state
-    return JSONResponse(get_state(user_id))
-                        ~~~~~~~~~^^^^^^^^^
-  File "/app/main.py", line 58, in get_state
-    conn = db()
-  File "/app/main.py", line 48, in db
-INFO:apscheduler.executors.default:Running job "reminder_tick (trigger: cron[second='0'], next run at: 2026-08-11 12:56:00 MSK)" (scheduled at 2026-08-11 12:55:00+03:00)
-ERROR:apscheduler.executors.default:Job "reminder_tick (trigger: cron[second='0'], next run at: 2026-08-11 12:56:00 MSK)" raised an exception
-Traceback (most recent call last):
-  File "/app/.venv/lib/python3.13/site-packages/apscheduler/executors/base_py3.py", line 30, in run_coroutine_job
-    retval = await job.func(*job.args, **job.kwargs)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/main.py", line 131, in reminder_tick
-    for user_id in all_user_ids():
-                   ~~~~~~~~~~~~^^
-  File "/app/main.py", line 76, in all_user_ids
-    conn = db()
-  File "/app/main.py", line 48, in db
-    conn = sqlite3.connect(DB_PATH)
-sqlite3.OperationalError: unable to open database file
-INFO:apscheduler.executors.default:Running job "reminder_tick (trigger: cron[second='0'], next run at: 2026-08-11 12:57:00 MSK)" (scheduled at 2026-08-11 12:56:00+03:00)
-ERROR:apscheduler.executors.default:Job "reminder_tick (trigger: cron[second='0'], next run at: 2026-08-11 12:57:00 MSK)" raised an exception
-Traceback (most recent call last):
-  File "/app/.venv/lib/python3.13/site-packages/apscheduler/executors/base_py3.py", line 30, in run_coroutine_job
-    retval = await job.func(*job.args, **job.kwargs)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/main.py", line 131, in reminder_tick
-    for user_id in all_user_ids():
-                   ~~~~~~~~~~~~^^
-  File "/app/main.py", line 76, in all_user_ids
-    conn = db()
-  File "/app/main.py", line 48, in db
-    conn = sqlite3.connect(DB_PATH)
-sqlite3.OperationalError: unable to open database file
+async function loadState(){
+  try{
+    const res = await fetch(`/api/state?user_id=${encodeURIComponent(USER_ID)}`);
+    if(res.ok){ state = await res.json(); }
+  }catch(e){ console.error('load failed', e); }
+  dataLoaded = true;
+  renderAll();
+}
+let saveTimer=null;
+let pendingSave=false;
+function doSave(){
+  pendingSave=false;
+  const payload = JSON.stringify({ user_id: USER_ID, state });
+  try{
+    if(navigator.sendBeacon){
+      const blob = new Blob([payload], {type:'application/json'});
+      const ok = navigator.sendBeacon('/api/state', blob);
+      if(ok) return;
+    }
+  }catch(e){}
+  try{
+    fetch('/api/state', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: payload, keepalive:true
+    });
+  }catch(e){ console.error('save failed', e); }
+}
+function saveState(){
+  pendingSave=true;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 250);
+}
+function flushSave(){
+  if(pendingSave){ clearTimeout(saveTimer); doSave(); }
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) flushSave(); });
+window.addEventListener('pagehide', flushSave);
+window.addEventListener('blur', flushSave);
+if(tg && tg.onEvent){ try{ tg.onEvent('viewportChanged', flushSave); }catch(e){} }
 
+/* ===================== HELPERS ===================== */
+function todayStr(d=new Date()){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function fmtHeaderDate(){
+  const d = new Date();
+  const opts = {weekday:'long', day:'numeric', month:'long'};
+  return d.toLocaleDateString('ru-RU', opts);
+}
+const DOW = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+function dowIndex(d){ let i = d.getDay()-1; if(i<0) i=6; return i; }
+function isScheduledOn(habit, dateObj){
+  if(habit.schedule.type==='daily') return true;
+  if(habit.schedule.type==='days') return habit.schedule.days.includes(dowIndex(dateObj));
+  return true;
+}
+function getVal(habitId, dateStr){
+  const h = state.completions[habitId];
+  if(!h) return habit.type==='count'?0:false;
+  return h[dateStr] ?? (0);
+}
+function completionValue(habit, dateStr){
+  const rec = state.completions[habit.id];
+  if(!rec || rec[dateStr]===undefined) return habit.type==='count' ? 0 : false;
+  return rec[dateStr];
+}
+function isDoneOn(habit, dateStr){
+  const v = completionValue(habit, dateStr);
+  if(habit.type==='count') return v >= (habit.target||1);
+  return !!v;
+}
+function setVal(habitId, dateStr, val){
+  if(!state.completions[habitId]) state.completions[habitId] = {};
+  state.completions[habitId][dateStr] = val;
+  saveState();
+}
 
-Checking your project data
+function calcStreak(habit){
+  let streak=0;
+  let d = new Date();
+  // if today not yet done (and scheduled), start checking from yesterday for "current streak" logic but count today if done
+  for(let i=0;i<400;i++){
+    const ds = todayStr(d);
+    if(isScheduledOn(habit,d)){
+      if(isDoneOn(habit,ds)){ streak++; }
+      else {
+        if(ds===todayStr()) { /* today not done yet, doesn't break streak */ }
+        else break;
+      }
+    }
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+function calcBestStreak(habit){
+  // simple approx: scan completions history
+  const dates = Object.keys(state.completions[habit.id]||{}).sort();
+  if(!dates.length) return 0;
+  let best=0, cur=0, prevDate=null;
+  let d = new Date(dates[0]);
+  let end = new Date();
+  while(d<=end){
+    const ds = todayStr(d);
+    if(isScheduledOn(habit,d)){
+      if(isDoneOn(habit,ds)){ cur++; best=Math.max(best,cur);}
+      else cur=0;
+    }
+    d.setDate(d.getDate()+1);
+  }
+  return best;
+}
 
+function overallStreak(){
+  // days in a row where ALL scheduled non-paused non-archived habits fully done
+  const active = state.habits.filter(h=>!h.paused && !h.archived);
+  if(!active.length) return 0;
+  let streak=0; let d=new Date();
+  for(let i=0;i<365;i++){
+    const ds = todayStr(d);
+    const scheduled = active.filter(h=>isScheduledOn(h,d));
+    if(scheduled.length===0){ d.setDate(d.getDate()-1); continue; }
+    const allDone = scheduled.every(h=>isDoneOn(h,ds));
+    if(allDone) streak++;
+    else if(ds!==todayStr()) break;
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
 
-Agent is now billable.
-Usage counts toward your workspace spend. Learn more →
+/* ===================== RENDER: TODAY ===================== */
+function renderToday(){
+  document.getElementById('todayDate').textContent = fmtHeaderDate();
+  const list = document.getElementById('todayList');
+  const now = new Date();
+  const ds = todayStr();
+  const active = state.habits.filter(h=>!h.archived && !h.paused && isScheduledOn(h, now));
 
-/data
+  let doneCount=0;
+  active.forEach(h=>{ if(isDoneOn(h,ds)) doneCount++; });
+  document.getElementById('statDoneToday').textContent = doneCount+'/'+active.length;
 
-I'll show you what's in your project's data by checking services, volumes, and buckets.
+  if(!state.habits.length){
+    list.innerHTML = `<div class="empty">
+      <span class="emoji">🌱</span>
+      <h3>Пока пусто</h3>
+      <p>Нажми на кнопку «+» внизу и добавь первую привычку. Начни с чего-то простого.</p>
+    </div>`;
+  } else if(!active.length){
+    list.innerHTML = `<div class="empty">
+      <span class="emoji">✨</span>
+      <h3>На сегодня ничего не запланировано</h3>
+      <p>Загляни в календарь или добавь новую привычку.</p>
+    </div>`;
+  } else {
+    list.innerHTML = active.map(h=>habitCardHTML(h, ds)).join('');
+  }
+  attachSwipeHandlers();
+  updateStreakPill();
+  renderWeekStat();
+}
 
-Searched environment: *
-Checked environment status
+function habitCardHTML(h, ds){
+  const done = isDoneOn(h, ds);
+  const streak = calcStreak(h);
+  let control;
+  if(h.type==='count'){
+    const val = completionValue(h, ds);
+    const target = h.target||1;
+    const pct = Math.min(100, Math.round((val/target)*100));
+    const r=17, circ=2*Math.PI*r, offset = circ - (pct/100)*circ;
+    control = `<div class="qty-ring-wrap" onclick="incrementHabit('${h.id}')">
+      <svg width="44" height="44" viewBox="0 0 44 44">
+        <circle class="qty-ring-bg" cx="22" cy="22" r="${r}"></circle>
+        <circle class="qty-ring-fg" cx="22" cy="22" r="${r}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"></circle>
+      </svg>
+      <div class="qty-label">${val}/${target}</div>
+    </div>`;
+  } else {
+    control = `<div class="check-btn ${done?'checked':''}" onclick="toggleCheck('${h.id}')">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>`;
+  }
+  let progressBar = '';
+  if(h.type==='count'){
+    const val = completionValue(h, ds); const target=h.target||1;
+    progressBar = `<div class="habit-progress-track"><div class="habit-progress-fill" style="width:${Math.min(100,(val/target)*100)}%;"></div></div>`;
+  }
+  return `<div class="habit-wrap" data-id="${h.id}">
+    <div class="swipe-actions">
+      <div class="swipe-btn del" onclick="deleteHabit('${h.id}')">🗑</div>
+    </div>
+    <div class="habit-card ${done?'done':''}" data-id="${h.id}" onclick="editHabit('${h.id}', event)">
+      <div class="habit-emoji">${h.emoji}</div>
+      <div class="habit-info">
+        <div class="habit-name">${escapeHtml(h.name)}</div>
+        <div class="habit-meta">${streak>0?`<span class="streakdot">🔥 ${streak}</span>`:'<span>Начни серию</span>'}${h.category?`<span>· ${h.category}</span>`:''}</div>
+        ${progressBar}
+      </div>
+      <div onclick="event.stopPropagation()">${control}</div>
+    </div>
+  </div>`;
+}
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
-Hide result
--habit-tracker-bot
-Online
-Your project has:
+function toggleCheck(id){
+  const ds = todayStr();
+  const cur = completionValue(state.habits.find(h=>h.id===id), ds);
+  setVal(id, ds, !cur);
+  const cardEl = document.querySelector(`.habit-card[data-id="${id}"]`);
+  if(cardEl){ cardEl.style.transform='scale(1.02)'; setTimeout(()=>cardEl.style.transform='',180); }
+  renderAll();
+}
+function incrementHabit(id){
+  const h = state.habits.find(x=>x.id===id);
+  const ds = todayStr();
+  let val = completionValue(h, ds);
+  const target = h.target||1;
+  val = val>=target ? 0 : val+1; // tap past target resets (simple cycle)
+  setVal(id, ds, val);
+  renderAll();
+  if(val>=target) showToast('Готово! Цель достигнута 🎉');
+}
 
-Services
+/* ===================== SWIPE (delete) + LONG-PRESS (reorder) ===================== */
+function attachSwipeHandlers(){
+  document.querySelectorAll('.habit-card').forEach(card=>{
+    let startX=0, startY=0, curX=0, swiping=false;
+    let longPressTimer=null, reordering=false;
+    let orderIds=[], startIndex=0, currentIndex=0, itemHeight=0;
+    const wrap = card.parentElement;
+    const list = wrap.parentElement;
 
--habit-tracker-bot (online, 1 replica running)
-GitHub: cherniypavel51-design/-habit-tracker-bot (main branch)
-Region: US West (sfo)
-Public domain: habit-tracker-bot-production-e103.up.railway.app:8080
-Last deployment: successful on Aug 11, 09:10 UTC
-Volumes: None
+    function beginReorder(){
+      reordering = true; swiping = false;
+      if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; }
+      if(tg && tg.HapticFeedback){ try{ tg.HapticFeedback.impactOccurred('medium'); }catch(e){} }
+      orderIds = [...list.querySelectorAll('.habit-wrap')].map(w=>w.dataset.id);
+      startIndex = currentIndex = orderIds.indexOf(wrap.dataset.id);
+      itemHeight = wrap.getBoundingClientRect().height + 12;
+      wrap.classList.add('reordering');
+      wrap.style.transition='none';
+    }
+    function applyReorderMove(dy){
+      wrap.style.transform = `translateY(${dy}px)`;
+      const newIndex = Math.max(0, Math.min(orderIds.length-1, startIndex + Math.round(dy/itemHeight)));
+      if(newIndex === currentIndex) return;
+      orderIds.forEach((id,oi)=>{
+        if(id===wrap.dataset.id) return;
+        const el = list.querySelector(`.habit-wrap[data-id="${id}"]`);
+        if(!el) return;
+        let shift = 0;
+        if(startIndex < newIndex){ if(oi>startIndex && oi<=newIndex) shift = -itemHeight; }
+        else if(startIndex > newIndex){ if(oi<startIndex && oi>=newIndex) shift = itemHeight; }
+        el.style.transition='transform .2s cubic-bezier(.22,1,.36,1)';
+        el.style.transform = shift ? `translateY(${shift}px)` : '';
+      });
+      currentIndex = newIndex;
+    }
+    function endReorder(){
+      wrap.classList.remove('reordering');
+      wrap.style.transition='transform .2s cubic-bezier(.22,1,.36,1)';
+      wrap.style.transform='';
+      orderIds.forEach(id=>{
+        if(id===wrap.dataset.id) return;
+        const el = list.querySelector(`.habit-wrap[data-id="${id}"]`);
+        if(el){ el.style.transform=''; }
+      });
+      if(currentIndex !== startIndex){
+        const newOrder = [...orderIds];
+        newOrder.splice(startIndex,1);
+        newOrder.splice(currentIndex,0,wrap.dataset.id);
+        commitReorder(newOrder);
+        saveState();
+        setTimeout(renderAll, 180);
+      }
+      reordering = false;
+    }
 
-Buckets: None
+    card.addEventListener('touchstart', e=>{
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+      curX=0; swiping=true; reordering=false;
+      card.style.transition='none';
+      longPressTimer = setTimeout(beginReorder, 420);
+    }, {passive:true});
 
-The bot is live. No persistent storage is configured. Want to add a database, cache, or storage, or check logs?
+    card.addEventListener('touchmove', e=>{
+      const x = e.touches[0].clientX, y = e.touches[0].clientY;
+      const dx = x-startX, dy = y-startY;
+      if(reordering){
+        e.preventDefault();
+        applyReorderMove(dy);
+        return;
+      }
+      if(longPressTimer && (Math.abs(dx)>10 || Math.abs(dy)>10)){
+        clearTimeout(longPressTimer); longPressTimer=null;
+      }
+      if(!swiping) return;
+      if(Math.abs(dy) > Math.abs(dx)){ swiping=false; return; } // vertical scroll, let it through
+      curX = dx;
+      if(curX>0) curX=0;
+      if(curX<-70) curX=-70;
+      card.style.transform = `translateX(${curX}px)`;
+    }, {passive:false});
 
-Создай волюм и привяжи его к сервису -habit-tracker-bot с путём монтирования /data
+    card.addEventListener('touchend', ()=>{
+      if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; }
+      if(reordering){ endReorder(); return; }
+      swiping=false;
+      card.style.transition='transform .3s cubic-bezier(.22,1,.36,1)';
+      if(curX < -35){ card.style.transform='translateX(-70px)'; }
+      else { card.style.transform='translateX(0)'; }
+      curX=0;
+    });
+  });
+}
 
-Staged volume: habit-tracker-data
+function commitReorder(newOrderIds){
+  const idxs = [];
+  state.habits.forEach((h,i)=>{ if(newOrderIds.includes(h.id)) idxs.push(i); });
+  const byId = {}; state.habits.forEach(h=>{ byId[h.id]=h; });
+  newOrderIds.forEach((id,k)=>{ state.habits[idxs[k]] = byId[id]; });
+}
 
-Create "habit-tracker-data"
-Deployed
-Готово! Создан волюм habit-tracker-data и привязан к сервису -habit-tracker-bot с путём монтирования /data.
+/* ===================== STREAK PILL / WEEK STAT ===================== */
+function updateStreakPill(){
+  const s = overallStreak();
+  const pill = document.getElementById('streakPill');
+  const numEl = document.getElementById('streakNum');
+  if(parseInt(numEl.textContent)!==s){
+    numEl.textContent = s;
+    pill.classList.add('bump');
+    setTimeout(()=>pill.classList.remove('bump'), 300);
+  }
+}
+function renderWeekStat(){
+  const active = state.habits.filter(h=>!h.archived);
+  let total=0, done=0;
+  for(let i=0;i<7;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const ds = todayStr(d);
+    active.forEach(h=>{
+      if(h.paused) return;
+      if(new Date(h.createdAt) > d) return;
+      if(isScheduledOn(h,d)){ total++; if(isDoneOn(h,ds)) done++; }
+    });
+  }
+  const pct = total? Math.round(done/total*100) : 0;
+  document.getElementById('statWeekPct').textContent = pct+'%';
+}
+function renderMonthStat(){
+  const active = state.habits.filter(h=>!h.archived);
+  let total=0, done=0;
+  for(let i=0;i<30;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const ds = todayStr(d);
+    active.forEach(h=>{
+      if(h.paused) return;
+      if(new Date(h.createdAt) > d) return;
+      if(isScheduledOn(h,d)){ total++; if(isDoneOn(h,ds)) done++; }
+    });
+  }
+  const pct = total? Math.round(done/total*100) : 0;
+  document.getElementById('statMonthPct').textContent = pct+'%';
+  let best=0;
+  active.forEach(h=>{ best = Math.max(best, calcBestStreak(h)); });
+  document.getElementById('statBestStreak').textContent = best;
+}
 
-Волюм будет доступен после перезапуска сервиса. Нужно её развернуть?
+/* ===================== CALENDAR ===================== */
+let calMonth = new Date();
+let calFilterId = 'all';
+function renderCalChips(){
+  const wrap = document.getElementById('calChips');
+  const chips = [{id:'all', name:'Все', emoji:'📅'}, ...state.habits.filter(h=>!h.archived)];
+  wrap.innerHTML = chips.map(h=>`<div class="chip ${calFilterId===h.id?'sel':''}" onclick="setCalFilter('${h.id}')">${h.emoji||''} ${escapeHtml(h.name||h.id==='all'?h.name:'')}</div>`).join('');
+}
+function setCalFilter(id){ calFilterId=id; renderCalendar(); renderCalChips(); }
+function shiftMonth(delta){ calMonth.setMonth(calMonth.getMonth()+delta); renderCalendar(); }
+function renderCalendar(){
+  renderCalChips();
+  const label = calMonth.toLocaleDateString('ru-RU', {month:'long', year:'numeric'});
+  document.getElementById('calMonthLabel').textContent = label;
+  const grid = document.getElementById('calGrid');
+  let html = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
 
-Deployed · 1 resource created, 1 resource updated (Details)
-Проверь, что том подключён к -habit-tracker-bot
+  const year = calMonth.getFullYear(), month = calMonth.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const startOffset = dowIndex(firstDay);
+  const daysInMonth = new Date(year, month+1, 0).getDate();
 
-Fetched service config
-✅ Том подключён!
+  for(let i=0;i<startOffset;i++) html += `<div class="cal-cell empty"></div>`;
 
-Волюм habit-tracker-data:
+  const habitsForCalc = calFilterId==='all' ? state.habits.filter(h=>!h.archived) : state.habits.filter(h=>h.id===calFilterId);
 
-ID: dc1706ee-d58f-4d72-8638-789016c0a76c
-Путь монтирования: /data
-Сервис: -habit-tracker-bot
-Том готов к использованию.
+  for(let day=1; day<=daysInMonth; day++){
+    const d = new Date(year, month, day);
+    const ds = todayStr(d);
+    const isToday = ds===todayStr();
+    const scheduled = habitsForCalc.filter(h=> new Date(h.createdAt)<=d && isScheduledOn(h,d) && !h.paused);
+    let level = 0;
+    if(scheduled.length){
+      const doneN = scheduled.filter(h=>isDoneOn(h,ds)).length;
+      const ratio = doneN/scheduled.length;
+      if(ratio>0 && ratio<0.34) level=1;
+      else if(ratio>=0.34 && ratio<0.67) level=2;
+      else if(ratio>=0.67 && ratio<1) level=3;
+      else if(ratio===1) level=4;
+    }
+    html += `<div class="cal-cell ${isToday?'today':''} ${level?'l'+level:''}">${day}</div>`;
+  }
+  grid.innerHTML = html;
+}
 
-Develop, debug, deploy anything...
+/* ===================== STATS VIEW ===================== */
+function renderStatsList(filterText=''){
+  renderMonthStat();
+  const list = document.getElementById('statsList');
+  const items = state.habits.filter(h=>!h.archived && h.name.toLowerCase().includes(filterText.toLowerCase()));
+  if(!items.length){
+    list.innerHTML = `<div class="empty"><span class="emoji">📊</span><h3>Нет данных</h3><p>Добавь привычки, чтобы видеть статистику.</p></div>`;
+    return;
+  }
+  list.innerHTML = items.map(h=>{
+    const streak = calcStreak(h);
+    const best = calcBestStreak(h);
+    let total=0, done=0;
+    for(let i=0;i<30;i++){
+      const d = new Date(); d.setDate(d.getDate()-i);
+      if(new Date(h.createdAt)>d) continue;
+      if(isScheduledOn(h,d)){ total++; if(isDoneOn(h,todayStr(d))) done++; }
+    }
+    const pct = total? Math.round(done/total*100):0;
+    return `<div class="habit-stat-card glass">
+      <div class="habit-stat-top">
+        <div class="habit-emoji">${h.emoji}</div>
+        <div class="habit-name">${escapeHtml(h.name)}${h.paused?' <span style="color:var(--ink-faint); font-size:11px;">· на паузе</span>':''}</div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat"><div class="n">🔥 ${streak}</div><div class="l">Сейчас</div></div>
+        <div class="mini-stat"><div class="n">${best}</div><div class="l">Рекорд</div></div>
+        <div class="mini-stat"><div class="n">${pct}%</div><div class="l">За месяц</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
 
+/* ===================== TABS ===================== */
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('view-'+tab.dataset.view).classList.add('active');
+    if(tab.dataset.view==='calendar') renderCalendar();
+    if(tab.dataset.view==='stats') renderStatsList(document.getElementById('searchInput').value);
+  });
+});
+document.getElementById('searchInput').addEventListener('input', e=>renderStatsList(e.target.value));
 
-500
+/* ===================== ADD/EDIT SHEET ===================== */
+const EMOJIS = ['💧','📚','🏃','🧘','🥗','😴','✍️','💊','🎯','🎸','🧹','☕','🌱','💪','🧠','📵'];
+const CATEGORIES = ['Здоровье','Продуктивность','Учёба','Разное'];
+let editingId = null;
+let sel = { emoji:EMOJIS[0], category:CATEGORIES[0], type:'check', days:[0,1,2,3,4,5,6] };
+
+function buildEmojiGrid(){
+  document.getElementById('emojiGrid').innerHTML = EMOJIS.map(e=>
+    `<div class="emoji-opt ${sel.emoji===e?'sel':''}" onclick="pickEmoji('${e}')">${e}</div>`).join('');
+}
+function pickEmoji(e){ sel.emoji=e; buildEmojiGrid(); }
+function buildCategorySeg(){
+  document.getElementById('categorySeg').innerHTML = CATEGORIES.map(c=>
+    `<div class="seg-opt ${sel.category===c?'sel':''}" onclick="pickCategory('${c}')">${c}</div>`).join('');
+}
+function pickCategory(c){ sel.category=c; buildCategorySeg(); }
+function buildDaysGrid(){
+  document.getElementById('daysGrid').innerHTML = DOW.map((d,i)=>
+    `<div class="day-opt ${sel.days.includes(i)?'sel':''}" onclick="toggleDay(${i})">${d}</div>`).join('');
+}
+function toggleDay(i){
+  if(sel.days.includes(i)) sel.days = sel.days.filter(x=>x!==i);
+  else sel.days.push(i);
+  buildDaysGrid();
+}
+let reminderTimes = ['09:00'];
+function renderReminderRows(){
+  const wrap = document.getElementById('reminderRows');
+  wrap.innerHTML = reminderTimes.map((t,i)=>`
+    <div class="reminder-row">
+      <input type="time" value="${t}" onchange="reminderTimes[${i}]=this.value">
+      ${reminderTimes.length>1 ? `<div class="reminder-remove" onclick="removeReminderRow(${i})">✕</div>` : ''}
+    </div>`).join('');
+}
+function addReminderRow(){ reminderTimes.push('09:00'); renderReminderRows(); }
+function removeReminderRow(i){ reminderTimes.splice(i,1); renderReminderRows(); }
+
+document.getElementById('typeSeg').addEventListener('click', e=>{
+  const opt = e.target.closest('.seg-opt'); if(!opt) return;
+  sel.type = opt.dataset.type;
+  document.querySelectorAll('#typeSeg .seg-opt').forEach(o=>o.classList.toggle('sel', o===opt));
+  document.getElementById('targetField').style.display = sel.type==='count' ? 'block' : 'none';
+});
+
+function openHabitSheet(){
+  editingId = null;
+  sel = { emoji:EMOJIS[0], category:CATEGORIES[0], type:'check', days:[0,1,2,3,4,5,6] };
+  document.getElementById('sheetTitle').textContent = 'Новая привычка';
+  document.getElementById('fName').value='';
+  document.getElementById('fTarget').value=7;
+  reminderTimes = ['09:00'];
+  renderReminderRows();
+  document.getElementById('targetField').style.display='none';
+  document.getElementById('archiveBtn').style.display='none';
+  document.querySelectorAll('#typeSeg .seg-opt').forEach(o=>o.classList.toggle('sel', o.dataset.type==='check'));
+  buildEmojiGrid(); buildCategorySeg(); buildDaysGrid();
+  document.getElementById('habitOverlay').classList.add('show');
+}
+function editHabit(id, evt){
+  if(evt.target.closest('.check-btn') || evt.target.closest('.qty-ring-wrap')) return;
+  const h = state.habits.find(x=>x.id===id);
+  if(!h) return;
+  editingId = id;
+  sel = { emoji:h.emoji, category:h.category, type:h.type, days: h.schedule.type==='days'?[...h.schedule.days]:[0,1,2,3,4,5,6] };
+  document.getElementById('sheetTitle').textContent = 'Изменить привычку';
+  document.getElementById('fName').value = h.name;
+  document.getElementById('fTarget').value = h.target||7;
+  reminderTimes = (h.reminderTimes && h.reminderTimes.length) ? [...h.reminderTimes] : (h.reminderTime ? [h.reminderTime] : ['09:00']);
+  renderReminderRows();
+  document.getElementById('targetField').style.display = h.type==='count'?'block':'none';
+  document.querySelectorAll('#typeSeg .seg-opt').forEach(o=>o.classList.toggle('sel', o.dataset.type===h.type));
+  document.getElementById('archiveBtn').style.display='block';
+  document.getElementById('archiveBtn').textContent = h.paused ? 'Возобновить' : 'Приостановить';
+  buildEmojiGrid(); buildCategorySeg(); buildDaysGrid();
+  document.getElementById('habitOverlay').classList.add('show');
+}
+function closeSheet(){ document.getElementById('habitOverlay').classList.remove('show'); }
+document.getElementById('habitOverlay').addEventListener('click', e=>{ if(e.target.id==='habitOverlay') closeSheet(); });
+
+/* ===================== SHEET: SWIPE-DOWN TO CLOSE ===================== */
+(function(){
+  const handle = document.getElementById('sheetHandleHit');
+  const sheetEl = document.querySelector('.sheet');
+  let startY=0, dy=0, dragging=false;
+  handle.addEventListener('touchstart', e=>{
+    startY = e.touches[0].clientY; dy=0; dragging=true; sheetEl.style.transition='none';
+  }, {passive:true});
+  handle.addEventListener('touchmove', e=>{
+    if(!dragging) return;
+    dy = e.touches[0].clientY - startY;
+    if(dy<0) dy=0;
+    sheetEl.style.transform = `translateY(${dy}px)`;
+  }, {passive:true});
+  handle.addEventListener('touchend', ()=>{
+    dragging=false;
+    sheetEl.style.transition='transform .3s cubic-bezier(.22,1,.36,1)';
+    if(dy>90){
+      sheetEl.style.transform='translateY(100%)';
+      setTimeout(()=>{
+        document.getElementById('habitOverlay').classList.remove('show');
+        sheetEl.style.transform='';
+      }, 280);
+    } else {
+      sheetEl.style.transform='';
+    }
+    dy=0;
+  });
+})();
+
+function saveHabit(){
+  const name = document.getElementById('fName').value.trim();
+  if(!name){ showToast('Введи название'); return; }
+  const target = parseInt(document.getElementById('fTarget').value)||1;
+  const cleanTimes = [...new Set(reminderTimes.filter(Boolean))];
+  const finalTimes = cleanTimes.length ? cleanTimes : ['09:00'];
+  const schedule = sel.days.length===7 ? {type:'daily'} : {type:'days', days:sel.days};
+
+  if(editingId){
+    const h = state.habits.find(x=>x.id===editingId);
+    Object.assign(h, { name, emoji:sel.emoji, category:sel.category, type:sel.type, target, schedule, reminderTimes: finalTimes });
+    delete h.reminderTime;
+  } else {
+    state.habits.push({
+      id: 'h'+Date.now(),
+      name, emoji:sel.emoji, category:sel.category, type:sel.type, target,
+      schedule, reminderTimes: finalTimes, paused:false, archived:false, createdAt:new Date().toISOString()
+    });
+  }
+  saveState();
+  closeSheet();
+  renderAll();
+  showToast(editingId?'Сохранено':'Привычка добавлена');
+}
+function toggleArchive(){
+  const h = state.habits.find(x=>x.id===editingId);
+  if(!h) return;
+  h.paused = !h.paused;
+  saveState();
+  closeSheet();
+  renderAll();
+  showToast(h.paused?'Приостановлено':'Возобновлено');
+}
+function deleteHabit(id){
+  const wrap = document.querySelector(`.habit-wrap[data-id="${id}"]`);
+  if(wrap){ wrap.style.transition='all .3s ease'; wrap.style.opacity='0'; wrap.style.maxHeight='0'; wrap.style.marginBottom='0'; }
+  setTimeout(()=>{
+    state.habits = state.habits.filter(h=>h.id!==id);
+    delete state.completions[id];
+    saveState();
+    renderAll();
+  }, 280);
+}
+
+/* ===================== TOAST ===================== */
+let toastTimer=null;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ===================== RENDER ALL ===================== */
+function renderAll(){
+  if(!dataLoaded) return;
+  renderToday();
+  const activeTab = document.querySelector('.tab.active').dataset.view;
+  if(activeTab==='calendar') renderCalendar();
+  if(activeTab==='stats') renderStatsList(document.getElementById('searchInput').value);
+}
+
+loadState();
+</script>
+</body>
+</html>

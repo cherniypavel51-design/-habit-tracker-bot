@@ -19,6 +19,7 @@ import json
 import sqlite3
 import asyncio
 import logging
+import time
 from datetime import datetime, date
 from zoneinfo import ZoneInfo
 from contextlib import asynccontextmanager
@@ -110,8 +111,9 @@ dp = Dispatcher()
 
 @dp.message(CommandStart())
 async def start_handler(message: Message):
+    fresh_url = f"{WEBAPP_URL}?v={int(time.time())}"
     kb = InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text="Открыть трекер", web_app=WebAppInfo(url=WEBAPP_URL))
+        InlineKeyboardButton(text="Открыть трекер", web_app=WebAppInfo(url=fresh_url))
     ]])
     await message.answer(
         "Привет! Это твой трекер привычек. Открывай и отмечай выполненное — "

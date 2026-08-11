@@ -41,11 +41,46 @@ log = logging.getLogger("habit-tracker")
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 WEBAPP_URL = os.environ.get("WEBAPP_URL", "https://example.com")
 DB_PATH = os.environ.get("DB_PATH", "habits.db")
+FALLBACK_DB_PATH = "/app/habits_fallback.db"  # непостоянный, но хотя бы не даёт приложению падать
 
 # ---------------------------------------------------------------- DB
 
+_active_db_path = None
+
+def _prepare_db_path():
+    global _active_db_path
+    if _active_db_path:
+        return _active_db_path
+
+    d = os.path.dirname(DB_PATH) or "."
+    try:
+        os.makedirs(d, exist_ok=True)
+    except Exception as e:
+        log.warning("makedirs(%s) failed: %s", d, e)
+    try:
+        os.chmod(d, 0o777)
+    except Exception as e:
+        log.warning("chmod(%s) failed: %s", d, e)
+
+    log.info(
+        "DB setup: DB_PATH=%s dir=%s uid=%s gid=%s dir_exists=%s dir_writable=%s",
+        DB_PATH, d, os.getuid(), os.getgid(), os.path.isdir(d), os.access(d, os.W_OK),
+    )
+
+    try:
+        test_conn = sqlite3.connect(DB_PATH)
+        test_conn.execute("CREATE TABLE IF NOT EXISTS _write_test(x)")
+        test_conn.close()
+        log.info("DB_PATH %s is writable, using it.", DB_PATH)
+        _active_db_path = DB_PATH
+    except Exception as e:
+        log.error("DB_PATH %s NOT writable (%s). Falling back to %s — data will NOT persist across deploys until this is fixed!", DB_PATH, e, FALLBACK_DB_PATH)
+        _active_db_path = FALLBACK_DB_PATH
+    return _active_db_path
+
 def db():
-    conn = sqlite3.connect(DB_PATH)
+    path = _prepare_db_path()
+    conn = sqlite3.connect(path)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS user_state (
             user_id TEXT PRIMARY KEY,

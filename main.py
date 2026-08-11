@@ -135,7 +135,10 @@ async def reminder_tick(scheduler_state: dict):
         for h in habits:
             if h.get("archived") or h.get("paused"):
                 continue
-            if h.get("reminderTime") != hhmm:
+            times = h.get("reminderTimes")
+            if not times:
+                times = [h["reminderTime"]] if h.get("reminderTime") else []
+            if hhmm not in times:
                 continue
             if not is_scheduled_today(h, today):
                 continue
